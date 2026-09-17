@@ -34,6 +34,12 @@ RESERVED_PREFIXES = {
 
 
 @router.get(
+    "/r/{short_code}",
+    response_class=RedirectResponse,
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    include_in_schema=True,
+)
+@router.get(
     "/{short_code}",
     response_class=RedirectResponse,
     status_code=status.HTTP_307_TEMPORARY_REDIRECT,

@@ -14,10 +14,12 @@ export default defineConfig(() => {
     server: {
       proxy: {
         '/health': 'http://127.0.0.1:5000',
+        '/metrics': 'http://127.0.0.1:5000',
         '/docs': 'http://127.0.0.1:5000',
         '/redoc': 'http://127.0.0.1:5000',
         '/openapi.json': 'http://127.0.0.1:5000',
         '/api': 'http://127.0.0.1:5000',
+        '/r': 'http://127.0.0.1:5000',
       },
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
