@@ -139,20 +139,20 @@ pytest --cov=app tests/
 | Phase | Milestone | Status | Description |
 |---|---|---|---|
 | **Phase 1** | **FastAPI Core Skeleton** | **Completed** | Minimal ASGI app, GET /, GET /health, Pydantic settings, Pytest suite |
-| **Phase 2** | URL Creation (POST /api/v1/urls) | Current | Pydantic URL validation, schema definitions, service layer abstraction |
-| **Phase 3** | PostgreSQL & SQLAlchemy 2.x | Upcoming | Async engine, connection pool, Alembic migrations, constraints & indexes |
-| **Phase 4** | HTTP Redirect (GET /{short_code}) | Upcoming | HTTP 307 vs 301/302 semantics, path routing, lookup performance |
-| **Phase 5** | Short Code Generation & Base62 | Upcoming | Base62 bi-directional encoding, collision detection, unique constraints |
-| **Phase 6** | Redis Caching (Cache-Aside) | Upcoming | Cache get/set/delete, TTL, hit/miss metrics, graceful fallback on outage |
-| **Phase 7** | Analytics & Click Tracking | Upcoming | Click counts, timestamps, user-agent parsing, referrer, privacy-first |
-| **Phase 8** | Redis-Backed Rate Limiting | Upcoming | Token bucket/sliding window, concurrency control, 429 Too Many Requests |
-| **Phase 9** | Idempotency (Idempotency-Key) | Upcoming | Prevent duplicate creation on network retries, key replay & caching |
-| **Phase 10** | Comprehensive Test Suite | Upcoming | Unit, integration, and concurrency race-condition tests with Pytest |
-| **Phase 11** | Docker & Compose | Upcoming | Multi-stage Dockerfile, docker-compose.yml (FastAPI, Postgres, Redis) |
-| **Phase 12** | Observability & Metrics | Upcoming | Structured JSON logging, correlation IDs, Prometheus metrics exporter |
-| **Phase 13** | Performance Benchmarks | Upcoming | Locust load testing, P50/P95/P99 latency, cache hit ratio comparisons |
-| **Phase 14** | Chaos & Failure Testing | Upcoming | Simulated Redis outage, DB connection drop, graceful degradation |
-| **Phase 15** | System Design & Capacity Planning | Upcoming | 100M URLs/month math, sharding, replication, interview guide |
+| **Phase 2** | **URL Creation (POST /api/v1/urls)** | **Completed** | Pydantic URL validation, schema definitions, service layer abstraction |
+| **Phase 3** | **PostgreSQL & SQLAlchemy 2.x** | **Completed** | Async engine, connection pool, Alembic migrations, constraints & indexes |
+| **Phase 4** | **HTTP Redirect (GET /{short_code})** | **Completed** | HTTP 307 vs 301/302 semantics, path routing, lookup performance |
+| **Phase 5** | **Short Code Generation & Base62** | **Completed** | Base62 bi-directional encoding, collision detection, unique constraints |
+| **Phase 6** | **Redis Caching (Cache-Aside)** | **Completed** | Cache get/set/delete, TTL, hit/miss metrics, graceful fallback on outage |
+| **Phase 7** | **Analytics & Click Tracking** | **Completed** | Click counts, timestamps, user-agent parsing, referrer, privacy-first |
+| **Phase 8** | **Redis-Backed Rate Limiting** | **Completed** | Token bucket/sliding window, concurrency control, 429 Too Many Requests |
+| **Phase 9** | **Idempotency (Idempotency-Key)** | **Completed** | Prevent duplicate creation on network retries, key replay & caching |
+| **Phase 10** | **Comprehensive Test Suite** | **Completed** | Unit, integration, and concurrency race-condition tests with Pytest (44 tests) |
+| **Phase 11** | **Docker & Compose** | **Completed** | Multi-stage Dockerfile, docker-compose.yml (FastAPI, Postgres, Redis) |
+| **Phase 12** | **Observability & Metrics** | **Completed** | Structured JSON logging, correlation IDs, Prometheus metrics exporter |
+| **Phase 13** | **Performance Benchmarks** | **Completed** | Locust load testing, P50/P95/P99 latency, cache hit ratio comparisons |
+| **Phase 14** | **Chaos & Failure Testing** | **Completed** | Simulated Redis outage, DB connection drop, graceful degradation |
+| **Phase 15** | **System Design & Capacity Planning** | **Completed** | 100M URLs/month math, sharding, replication, interview guide |
 
 ---
 
