@@ -4,17 +4,21 @@ Scalable URL Shortener service built to demonstrate computer science
 and backend engineering principles.
 """
 
+import time
+import uuid
 from contextlib import asynccontextmanager
 from typing import Any, Dict
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import Base, close_database_connections, get_engine
 import app.models  # Registers URLModel and ClickEventModel
 from app.routes.analytics import router as analytics_router
 from app.routes.health import router as health_router
+from app.routes.metrics import router as metrics_router
 from app.routes.redirect import router as redirect_router
 from app.routes.urls import router as urls_router
+from app.utils.observability import metrics_registry, request_id_ctx
 
 settings = get_settings()
 
@@ -57,8 +61,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def observability_middleware(request: Request, call_next) -> Response:
+    """Attaches correlation ID, captures latency, and records Prometheus request counts."""
+    # 1. Resolve or generate Request / Correlation ID
+    req_id = request.headers.get("x-request-id") or request.headers.get("x-correlation-id") or uuid.uuid4().hex
+    token = request_id_ctx.set(req_id)
+
+    start_time = time.perf_counter()
+    try:
+        response: Response = await call_next(request)
+    except Exception:
+        duration = time.perf_counter() - start_time
+        metrics_registry.record_request(request.method, request.url.path, 500, duration)
+        request_id_ctx.reset(token)
+        raise
+
+    duration = time.perf_counter() - start_time
+    metrics_registry.record_request(request.method, request.url.path, response.status_code, duration)
+
+    # Attach correlation and latency headers to response
+    response.headers["X-Request-ID"] = req_id
+    response.headers["X-Response-Time-Ms"] = f"{duration * 1000:.2f}"
+    request_id_ctx.reset(token)
+    return response
+
+
 # Register routers
 app.include_router(health_router)
+app.include_router(metrics_router)
 app.include_router(urls_router)
 app.include_router(analytics_router)
 
