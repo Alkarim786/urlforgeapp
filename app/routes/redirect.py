@@ -8,11 +8,12 @@ Handles:
 
 import logging
 from typing import Optional
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db_session
+from app.services.analytics_service import AnalyticsService, get_analytics_service
 from app.services.url_service import URLService, get_url_service
 
 logger = logging.getLogger("urlforge.redirect")
@@ -51,6 +52,7 @@ RESERVED_PREFIXES = {
 )
 async def redirect_to_long_url(
     short_code: str,
+    request: Request,
     background_tasks: BackgroundTasks,
     redirect_code: Optional[int] = Query(
         default=status.HTTP_307_TEMPORARY_REDIRECT,
@@ -58,6 +60,7 @@ async def redirect_to_long_url(
     ),
     session: AsyncSession = Depends(get_db_session),
     service: URLService = Depends(get_url_service),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> RedirectResponse:
     """Redirect client to destination URL and trigger background click recording."""
     clean_code = short_code.strip()
@@ -77,8 +80,19 @@ async def redirect_to_long_url(
             detail=f"Short code '{clean_code}' was not found or has expired.",
         )
 
-    # 2. Asynchronously increment click count in the background to preserve sub-5ms latency
+    # 2. Asynchronously increment click count and detailed analytics in background
+    client_ip = request.client.host if request.client else None
+    referrer = request.headers.get("referer")
+    user_agent = request.headers.get("user-agent")
+
     background_tasks.add_task(service.record_click, clean_code)
+    background_tasks.add_task(
+        analytics_service.log_click,
+        short_code=clean_code,
+        referrer=referrer,
+        user_agent=user_agent,
+        client_ip=client_ip,
+    )
 
     # 3. Validate requested redirect HTTP code
     valid_redirect_codes = {

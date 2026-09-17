@@ -74,3 +74,38 @@ class URLMetadataResponse(BaseModel):
     last_accessed_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MetricBreakdown(BaseModel):
+    """Single aggregated category item with count and percentage."""
+
+    label: str
+    count: int
+    percentage: float = 0.0
+
+
+class ClickEventDetail(BaseModel):
+    """Individual anonymized access log entry."""
+
+    clicked_at: datetime
+    referrer: Optional[str] = "Direct / None"
+    user_agent_family: Optional[str] = "Unknown"
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AnalyticsSummaryResponse(BaseModel):
+    """Comprehensive analytics aggregation for a short link."""
+
+    short_code: str
+    original_url: str
+    total_clicks: int
+    unique_visitors: int
+    created_at: datetime
+    last_accessed_at: Optional[datetime] = None
+    referrers: list[MetricBreakdown] = Field(default_factory=list)
+    browsers: list[MetricBreakdown] = Field(default_factory=list)
+    recent_events: list[ClickEventDetail] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
