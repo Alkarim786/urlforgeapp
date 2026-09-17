@@ -161,3 +161,9 @@ def rate_limiter(
             )
 
     return dependency
+
+
+def get_rate_limit_service() -> RateLimitService:
+    """Dependency injection provider for RateLimitService."""
+    return RateLimitService()
+
