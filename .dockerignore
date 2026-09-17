@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Web
+node_modules/
+dist/
+build/
+.next/
+bun.lock
+
+# Documentation & IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
