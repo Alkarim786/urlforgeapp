@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db_session
 from app.schemas import URLCreateRequest, URLCreateResponse, URLMetadataResponse
+from app.services.rate_limit_service import rate_limiter
 from app.services.url_service import (
     CollisionRetryExhaustedError,
     DuplicateAliasError,
@@ -28,6 +29,7 @@ router = APIRouter(prefix="/api/v1/urls", tags=["URLs"])
         "Accepts a destination URL (HTTP or HTTPS) and returns a unique Base62 "
         "short code and clickable link. Persists to PostgreSQL with collision retry logic and caches to Redis."
     ),
+    dependencies=[Depends(rate_limiter(scope="url_create"))],
 )
 async def create_url(
     payload: URLCreateRequest,
