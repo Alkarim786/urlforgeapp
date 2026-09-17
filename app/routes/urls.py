@@ -100,3 +100,24 @@ async def get_url_metadata(
             detail=f"Short code '{short_code}' was not found or has expired.",
         )
     return metadata
+
+
+@router.delete(
+    "/{short_code}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a shortened URL",
+    description="Deletes short code from PostgreSQL database and evicts from Redis cache.",
+)
+async def delete_url(
+    short_code: str,
+    session: AsyncSession = Depends(get_db_session),
+    service: URLService = Depends(get_url_service),
+) -> None:
+    """Delete short URL mapping."""
+    deleted = await service.delete_url(short_code, session=session)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Short code '{short_code}' was not found.",
+        )
+

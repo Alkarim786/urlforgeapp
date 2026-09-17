@@ -229,6 +229,40 @@ class URLService:
             last_accessed_at=record.last_accessed_at,
         )
 
+    async def delete_url(
+        self,
+        short_code: str,
+        session: Optional[AsyncSession] = None,
+    ) -> bool:
+        """Delete URL record from database and evict from Redis cache."""
+        active_session = session or self._session
+        should_close = False
+        if active_session is None:
+            session_factory = get_session_factory()
+            active_session = session_factory()
+            should_close = True
+
+        try:
+            stmt = select(URLModel).where(URLModel.short_code == short_code)
+            res = await active_session.execute(stmt)
+            record = res.scalar_one_or_none()
+            if not record:
+                return False
+
+            await active_session.delete(record)
+            await active_session.commit()
+
+            # Evict from Redis cache
+            await self._cache.delete(f"url:{short_code}")
+            return True
+        except Exception as err:
+            logger.error("Failed to delete url '%s': %s", short_code, err)
+            await active_session.rollback()
+            return False
+        finally:
+            if should_close:
+                await active_session.close()
+
 
 def get_url_service() -> URLService:
     """Dependency injection provider for URLService."""
