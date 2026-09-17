@@ -9,7 +9,7 @@ Architecture:
 import logging
 from datetime import datetime, timezone
 from typing import Optional
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -179,6 +179,36 @@ class URLService:
         # 3. Populate Redis Cache
         await self._cache.set(f"url:{short_code}", record.original_url)
         return record.original_url
+
+    async def record_click(
+        self,
+        short_code: str,
+        session: Optional[AsyncSession] = None,
+    ) -> None:
+        """Atomically increment the click count and update last_accessed_at."""
+        active_session = session or self._session
+        should_close = False
+        if active_session is None:
+            active_session = await self._get_or_create_session()
+            should_close = True
+
+        try:
+            stmt = (
+                update(URLModel)
+                .where(URLModel.short_code == short_code)
+                .values(
+                    click_count=URLModel.click_count + 1,
+                    last_accessed_at=datetime.now(timezone.utc),
+                )
+            )
+            await active_session.execute(stmt)
+            await active_session.commit()
+        except Exception as err:
+            logger.warning("Failed to increment click count for '%s': %s", short_code, err)
+            await active_session.rollback()
+        finally:
+            if should_close:
+                await active_session.close()
 
     async def get_metadata(
         self,

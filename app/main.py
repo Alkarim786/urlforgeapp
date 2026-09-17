@@ -9,6 +9,7 @@ from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.routes.health import router as health_router
+from app.routes.redirect import router as redirect_router
 from app.routes.urls import router as urls_router
 
 settings = get_settings()
@@ -54,3 +55,8 @@ async def root() -> Dict[str, Any]:
         "health_url": "/health",
         "version": "0.1.0",
     }
+
+
+# Register wildcard redirect router last so it does not shadow API or root endpoints
+app.include_router(redirect_router)
+
