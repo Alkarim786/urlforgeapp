@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db_session
 from app.schemas import URLCreateRequest, URLCreateResponse, URLMetadataResponse
+from app.services.idempotency_service import IdempotencyService, get_idempotency_service
 from app.services.rate_limit_service import rate_limiter
 from app.services.url_service import (
     CollisionRetryExhaustedError,
@@ -37,13 +38,35 @@ async def create_url(
     response: Response,
     session: AsyncSession = Depends(get_db_session),
     service: URLService = Depends(get_url_service),
+    idempotency_service: IdempotencyService = Depends(get_idempotency_service),
 ) -> URLCreateResponse:
-    """Create short URL mapping and return 201 Created with Location header."""
+    """Create short URL mapping and return 201 Created with Location header.
+
+    Supports optional 'Idempotency-Key' header to guarantee safe network retries.
+    """
     base_url = str(request.base_url).rstrip("/")
+    idempotency_key = request.headers.get("idempotency-key")
+
+    payload_hash = None
+    if idempotency_key:
+        payload_hash = idempotency_service.compute_payload_hash(payload.model_dump())
+        cached_data = await idempotency_service.get_saved_response(idempotency_key, payload_hash)
+        if cached_data:
+            response.headers["Idempotency-Replay"] = "true"
+            response.headers["Location"] = cached_data["short_url"]
+            return URLCreateResponse(**cached_data)
 
     try:
         result = await service.create_short_url(payload, session=session, base_url=base_url)
         response.headers["Location"] = result.short_url
+
+        if idempotency_key and payload_hash:
+            await idempotency_service.store_response(
+                key=idempotency_key,
+                payload_hash=payload_hash,
+                response_data=result.model_dump(),
+            )
+
         return result
     except DuplicateAliasError as err:
         raise HTTPException(
